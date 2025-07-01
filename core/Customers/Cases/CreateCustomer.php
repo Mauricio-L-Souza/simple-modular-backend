@@ -3,8 +3,8 @@
 namespace Core\Customers\Cases;
 
 use App\Models\Customer;
-use App\Exceptions\CustomerException;
 use Core\Customers\Payloads\CustomerPayload;
+use Core\Customers\Exceptions\CustomerException;
 
 class CreateCustomer
 {

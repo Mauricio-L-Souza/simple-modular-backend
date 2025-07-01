@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Exceptions;
+namespace Core\Customers\Exceptions;
 
 use Core\Shared\Exception\BaseException;
 
