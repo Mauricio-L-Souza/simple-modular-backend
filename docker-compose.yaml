@@ -1,0 +1,46 @@
+volumes:
+  postgres_data:
+    driver: local
+
+services:
+  php:
+    restart: always
+    build:
+      context: './docker'
+      dockerfile: Dockerfile
+    volumes:
+      - ./:/usr/src/app
+      - ./docker/supervisor:/etc/supervisor/conf.d
+      - ./docker/config/php.ini:/usr/local/etc/php/php.ini
+    environment:
+      - OCTANE_WORKERS=4
+    ports:
+      - "80:9000"
+    networks:
+      - main-network
+    depends_on:
+      - redis
+      - postgres
+  redis:
+    image: redis
+    command: redis-server --save "" --appendonly no
+    expose:
+      - "6379"
+    networks:
+      - main-network
+  postgres:
+    image: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=desafio_backend
+      - POSTGRES_USER=default
+      - POSTGRES_PASSWORD=secret
+    networks:
+      - main-network
+
+networks:
+  main-network:
+    driver: bridge

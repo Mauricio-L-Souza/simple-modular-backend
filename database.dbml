@@ -1,0 +1,35 @@
+Table users {
+    id int [pk, increment]
+    name varchar [not null]
+    email varchar [not null, unique]
+    password varchar [not null]
+    created_at datetime
+    updated_at datetime
+}
+
+Table customers {
+    id int [pk, increment]
+    name varchar [not null]
+    email varchar [not null, unique]
+    created_at datetime
+    updated_at datetime
+    deleted_at datetime
+}
+
+Table customer_favorites {
+    id int [pk, increment]
+    title varchar [not null]
+    thumb_url varchar [not null]
+    product_id bigint [not null, note: 'Indexed']
+    customer_id int [not null, ref: > customers.id]
+    created_at datetime
+    updated_at datetime
+}
+
+Table user_accesses {
+    id int [pk, increment]
+    name varchar [not null]
+    user_id int [not null, ref: > users.id]
+    created_at datetime
+    updated_at datetime
+}

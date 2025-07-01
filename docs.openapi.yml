@@ -1,0 +1,692 @@
+openapi: 3.0.3
+info:
+  title: API Desafio Aiqfome
+  description: API para gerenciamento de clientes, produtos e favoritos
+  version: 1.0.0
+  contact:
+    name: Desafio Aiqfome
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    ApiToken:
+      type: apiKey
+      in: header
+      name: X-API-TOKEN
+      description: Token de autenticação base da API
+
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: ID do usuário
+        name:
+          type: string
+          description: Nome do usuário
+        email:
+          type: string
+          format: email
+          description: Email do usuário
+
+    UserAccess:
+      type: object
+      properties:
+        id:
+          type: integer
+        user_id:
+          type: integer
+        name:
+          type: string
+          enum:
+            - users.show
+            - users.store
+            - customers.show
+            - customers.store
+            - customers.update
+            - customers.delete
+            - favorites.index
+            - favorites.show
+            - favorites.store
+            - favorites.update
+            - favorites.delete
+            - products.index
+            - products.show
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    Customer:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: ID do cliente
+        name:
+          type: string
+          description: Nome do cliente
+        email:
+          type: string
+          format: email
+          description: Email do cliente
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        deleted_at:
+          type: string
+          format: date-time
+          nullable: true
+
+    CustomerFavorite:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: ID do favorito
+        title:
+          type: string
+          description: Título do produto favorito
+        thumb_url:
+          type: string
+          description: URL da imagem do produto
+        product_id:
+          type: integer
+          description: ID do produto
+        customer_id:
+          type: integer
+          description: ID do cliente
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    Product:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: ID do produto
+        name:
+          type: string
+          description: Nome do produto
+        price:
+          type: number
+          format: float
+          description: Preço do produto
+        description:
+          type: string
+          description: Descrição do produto
+        imageUrl:
+          type: string
+          description: URL da imagem do produto
+        rate:
+          type: number
+          format: float
+          nullable: true
+          description: Avaliação do produto
+        rateCount:
+          type: number
+          format: float
+          nullable: true
+          description: Quantidade de avaliações
+
+    CreateUserRequest:
+      type: object
+      required:
+        - name
+        - email
+        - accesses
+      properties:
+        name:
+          type: string
+          description: Nome do usuário
+        email:
+          type: string
+          format: email
+          description: Email do usuário
+        accesses:
+          type: array
+          items:
+            type: string
+            enum:
+              - users.show
+              - users.store
+              - customers.show
+              - customers.store
+              - customers.update
+              - customers.delete
+              - favorites.index
+              - favorites.show
+              - favorites.store
+              - favorites.update
+              - favorites.delete
+              - products.index
+              - products.show
+          description: Lista de permissões do usuário
+
+    CreateUserResponse:
+      type: object
+      properties:
+        created:
+          type: boolean
+          description: Indica se o usuário foi criado com sucesso
+
+    AuthenticateRequest:
+      type: object
+      required:
+        - email
+      properties:
+        email:
+          type: string
+          format: email
+          description: Email do usuário
+
+    AuthenticateResponse:
+      type: object
+      properties:
+        token:
+          type: string
+          description: Token de autenticação
+
+    CreateCustomerRequest:
+      type: object
+      required:
+        - name
+        - email
+      properties:
+        name:
+          type: string
+          description: Nome do cliente
+        email:
+          type: string
+          format: email
+          description: Email do cliente
+
+    UpdateCustomerRequest:
+      type: object
+      required:
+        - name
+        - email
+      properties:
+        name:
+          type: string
+          description: Nome do cliente
+        email:
+          type: string
+          format: email
+          description: Email do cliente
+
+    CreateFavoriteRequest:
+      type: object
+      required:
+        - product_id
+        - customer_id
+      properties:
+        product_id:
+          type: integer
+          description: ID do produto
+        customer_id:
+          type: integer
+          description: ID do cliente
+
+    PaginatedFavoritesResponse:
+      type: object
+      properties:
+        current_page:
+          type: integer
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/CustomerFavorite'
+        first_page_url:
+          type: string
+        from:
+          type: integer
+        last_page:
+          type: integer
+        last_page_url:
+          type: string
+        links:
+          type: array
+          items:
+            type: object
+        next_page_url:
+          type: string
+          nullable: true
+        path:
+          type: string
+        per_page:
+          type: integer
+        prev_page_url:
+          type: string
+          nullable: true
+        to:
+          type: integer
+        total:
+          type: integer
+
+    ErrorResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          description: Mensagem de erro
+
+paths:
+  /auth/create_user:
+    post:
+      tags:
+        - Autenticação
+      summary: Criar novo usuário
+      description: Cria um novo usuário com as permissões especificadas
+      security:
+        - ApiToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateUserRequest'
+      responses:
+        '200':
+          description: Usuário criado com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateUserResponse'
+        '422':
+          description: Erro de validação ou usuário já existe
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/authenticate:
+    post:
+      tags:
+        - Autenticação
+      summary: Autenticar usuário
+      description: Gera um token de autenticação para o usuário
+      security:
+        - ApiToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthenticateRequest'
+      responses:
+        '200':
+          description: Token gerado com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticateResponse'
+        '422':
+          description: Usuário não encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /customers/{customerID}:
+    get:
+      tags:
+        - Clientes
+      summary: Buscar cliente por ID
+      description: Retorna os dados de um cliente específico
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: customerID
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID do cliente
+      responses:
+        '200':
+          description: Cliente encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Customer'
+        '404':
+          description: Cliente não encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Usuário não tem permissão para acessar esta rota
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    put:
+      tags:
+        - Clientes
+      summary: Atualizar cliente
+      description: Atualiza os dados de um cliente específico
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: customerID
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID do cliente
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateCustomerRequest'
+      responses:
+        '200':
+          description: Cliente atualizado com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Customer'
+        '404':
+          description: Cliente não encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Erro de validação ou usuário não tem permissão
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    delete:
+      tags:
+        - Clientes
+      summary: Excluir cliente
+      description: Remove um cliente específico (soft delete)
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: customerID
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID do cliente
+      responses:
+        '200':
+          description: Cliente excluído com sucesso
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  deleted:
+                    type: boolean
+        '404':
+          description: Cliente não encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Usuário não tem permissão para acessar esta rota
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /customers:
+    post:
+      tags:
+        - Clientes
+      summary: Criar novo cliente
+      description: Cria um novo cliente
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateCustomerRequest'
+      responses:
+        '200':
+          description: Cliente criado com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Customer'
+        '422':
+          description: Erro de validação ou usuário não tem permissão
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /products:
+    get:
+      tags:
+        - Produtos
+      summary: Listar produtos
+      description: Retorna a lista de produtos disponíveis
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Lista de produtos
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Product'
+        '422':
+          description: Usuário não tem permissão para acessar esta rota
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /products/{productID}:
+    get:
+      tags:
+        - Produtos
+      summary: Buscar produto por ID
+      description: Retorna os dados de um produto específico
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: productID
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID do produto
+      responses:
+        '200':
+          description: Produto encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        '404':
+          description: Produto não encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Usuário não tem permissão para acessar esta rota
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /favorites/{favoriteID}:
+    get:
+      tags:
+        - Favoritos
+      summary: Buscar favorito por ID
+      description: Retorna os dados de um favorito específico
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: favoriteID
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID do favorito
+      responses:
+        '200':
+          description: Favorito encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomerFavorite'
+        '404':
+          description: Favorito não encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Usuário não tem permissão para acessar esta rota
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    delete:
+      tags:
+        - Favoritos
+      summary: Excluir favorito
+      description: Remove um favorito específico
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: favoriteID
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID do favorito
+      responses:
+        '200':
+          description: Favorito excluído com sucesso
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  deleted:
+                    type: boolean
+        '404':
+          description: Favorito não encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Usuário não tem permissão para acessar esta rota
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /favorites/{customerID}/list:
+    get:
+      tags:
+        - Favoritos
+      summary: Listar favoritos do cliente
+      description: Retorna a lista paginada de favoritos de um cliente específico
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: customerID
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID do cliente
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+          description: Número da página
+        - name: per_page
+          in: query
+          schema:
+            type: integer
+            default: 10
+          description: Itens por página
+      responses:
+        '200':
+          description: Lista de favoritos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedFavoritesResponse'
+        '422':
+          description: Usuário não tem permissão para acessar esta rota
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /favorites:
+    post:
+      tags:
+        - Favoritos
+      summary: Criar novo favorito
+      description: Adiciona um produto aos favoritos de um cliente
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateFavoriteRequest'
+      responses:
+        '200':
+          description: Favorito criado com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomerFavorite'
+        '422':
+          description: Erro de validação, usuário não tem permissão ou produto já está nos favoritos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+tags:
+  - name: Autenticação
+    description: Endpoints para autenticação e gerenciamento de usuários
+  - name: Clientes
+    description: Endpoints para gerenciamento de clientes
+  - name: Produtos
+    description: Endpoints para consulta de produtos
+  - name: Favoritos
+    description: Endpoints para gerenciamento de favoritos dos clientes
