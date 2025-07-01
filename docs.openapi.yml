@@ -1,10 +1,10 @@
 openapi: 3.0.3
 info:
-  title: API Desafio Aiqfome
+  title: API Desafio backend
   description: API para gerenciamento de clientes, produtos e favoritos
   version: 1.0.0
   contact:
-    name: Desafio Aiqfome
+    name: Desafio backend
 
 components:
   securitySchemes:
