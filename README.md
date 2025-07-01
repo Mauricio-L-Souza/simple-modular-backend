@@ -286,6 +286,13 @@ docker-compose exec -it -u user php bash
 
 # Executar migrations
 docker-compose exec php php artisan migrate
+```
 
+### Em caso de problemas (Necessário estar dentro do container)
+```bash
+### Verificar logs do supervisor
+cat /var/log/supervisor/supervisord.log
 
+### Verificar logs do octane
+cat /var/log/supervisor/octane_stdout.log
 ```
